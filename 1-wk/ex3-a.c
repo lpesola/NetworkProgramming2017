@@ -9,7 +9,7 @@
 int main(int argc, char *argv[]) 
 { 
 	if (argc == 1) {
-		printf("No files given\n");
+		perror("no file specified");
 		return 1;
 	} else {
 		char *fn = argv[1];

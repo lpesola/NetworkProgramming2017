@@ -20,18 +20,15 @@ struct pid_info pi = {0};
 // assuming information about _this_ program is requested
 int main(int argc, char **argv) 
 {
-	void (*fptr)();
-	fptr = print_env;
-	struct timeval result = measure_time(fptr);
-	struct timespec result_c = measure_time_clock(fptr);
+	struct timeval result = measure_time(print_env);
+	struct timespec result_c = measure_time_clock(print_env);
 
 	printf("Time elapsed printing environment variables:\n");
 	printf("- gettimeofday: %ld s, %ld us\n", result.tv_sec, result.tv_usec);
 	printf("- clock_gettime: %ld s, %ld ns\n", result_c.tv_sec, result_c.tv_nsec);
 	
-	fptr = get_pid_info;
-	result = measure_time(fptr);
-	result_c = measure_time_clock(fptr);
+	result = measure_time(get_pid_info);
+	result_c = measure_time_clock(get_pid_info);
 	
 	printf("This process' PID %d \n", pi.pid);	
 	printf("Parent's PID %d \n", pi.ppid);	

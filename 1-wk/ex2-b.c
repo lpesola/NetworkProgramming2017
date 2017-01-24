@@ -26,15 +26,12 @@ void double_lines(int fd)
 {
 	char buf[1000];
 	int i = 0;
-	int read_chars = 1;
 	while(read(fd, &buf[i], 1) == 1) {
-		read_chars += 1;
 		if (buf[i] == '\n'){
-			write(STDOUT_FILENO, &buf[0], read_chars);
-			write(STDOUT_FILENO, &buf[0], read_chars);
+			write(STDOUT_FILENO, &buf[0], i+1);
+			write(STDOUT_FILENO, &buf[0], i+1);
 			buf[0]='\0';
 			i = 0;
-			read_chars = 1;
 		}
 		i+=1;	
 	}	

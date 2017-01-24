@@ -21,24 +21,29 @@ struct pid_info pi = {0};
 int main(int argc, char **argv) 
 {
 	void (*fptr)();
-	fptr = get_pid_info;
+	fptr = print_env;
 	struct timeval result = measure_time(fptr);
-	struct timespec result_clock = measure_time_clock(fptr);
+	struct timespec result_c = measure_time_clock(fptr);
+
+	printf("Time elapsed printing environment variables:\n");
+	printf("- gettimeofday: %ld s, %ld us\n", result.tv_sec, result.tv_usec);
+	printf("- clock_gettime: %ld s, %ld ns\n", result_c.tv_sec, result_c.tv_nsec);
+	
+	fptr = get_pid_info;
+	result = measure_time(fptr);
+	result_c = measure_time_clock(fptr);
 	
 	printf("This process' PID %d \n", pi.pid);	
 	printf("Parent's PID %d \n", pi.ppid);	
 	printf("Process group's ID %d \n", pi.pgrpid);	
 	printf("(Real) UID %d \n", pi.uid);	
 
-	printf("Time elapsed getting pid info: %ld s and %ld micros\n", result.tv_sec, result.tv_usec);
-	printf("Time elapsed according to clock_: %ld and %ld \n\n", result_clock.tv_sec, result_clock.tv_nsec);
+	printf("Time elapsed getting pid info:\n");
+	printf("- gettimeofday: %ld s, %ld us\n", result.tv_sec, result.tv_usec);
+	printf("- clock_gettime: %ld s, %ld ns \n\n", result_c.tv_sec, result_c.tv_nsec);
 
-	fptr = print_env;
-	result = measure_time(fptr);
-	result_clock = measure_time_clock(fptr);
-	printf("Time elapsed printing environment variables: %ld s and %ld micros\n", result.tv_sec, result.tv_usec);
-	printf("Time elapsed according to clock_:");
-	printf("%ld sec and %ld nanosec\n", result_clock.tv_sec, result_clock.tv_nsec);
+
+	
 	return 0;
 }
 

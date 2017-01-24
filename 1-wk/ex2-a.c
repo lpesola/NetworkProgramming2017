@@ -1,11 +1,7 @@
 /* 
- * Doubler version a). 
- * Read text lines, write each line twice to stdout
- * so that original and re-written once are right next to each other.
- * File to read from may be defined as an argument: if no file is specified
- * stdin is used.
- * Expecting lines to be at most ????? bytes long. 
- * Use stdio.h for read & write.
+ * Doubler version a: use stdio for read & write.
+ * Read text lines, write each line twice to stdout.
+ * so that the copied appears immediately after the original.
  */
 
 #include <stdio.h>
@@ -27,6 +23,7 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
+// we may assume that lines are not arbitrarily/extremely long
 void double_lines(FILE *fp) 
 {
 	char buf[1000];

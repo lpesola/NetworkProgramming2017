@@ -1,7 +1,7 @@
 /*
  * Retrieve the type, owner and size of a given file and print them.
  */
-
+#define _XOPEN_SOURCE 500
 #include <sys/stat.h>
 #include <stdio.h>
 #include <pwd.h>
@@ -38,11 +38,6 @@ int main(int argc, char *argv[])
 			type = "symbolic link";
 		else if (S_ISSOCK(finfo.st_mode)!=0)
 			type = "socket";
-		/* 
-		 * causes warning: implicit declaration of function ‘S_ISSOCK’ 
-		 * with -std=c99 although the other macros do work: 
-		 * with gcc's default this doesn't happen
-		 */
 		else type = "N/A";
 
 		printf("Type: %s\n", type);

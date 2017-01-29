@@ -80,7 +80,6 @@ struct timeval measure_time(void (*func)())
 	gettimeofday(&before, NULL);
 	func();
 	gettimeofday(&after, NULL);
-	// assuming here execution will not take seconds; it should not
 	after.tv_sec -= before.tv_sec;
 	after.tv_usec -= before.tv_usec;
 	return after;
@@ -93,7 +92,6 @@ struct timespec measure_time_clock(void (*func)())
 	clock_gettime(CLOCK_MONOTONIC, &before);
 	func();
 	clock_gettime(CLOCK_MONOTONIC, &after);
-	// assuming here execution will not take seconds; it should not
 	after.tv_nsec = after.tv_nsec - before.tv_nsec;
 	after.tv_sec = after.tv_sec - before.tv_sec;
 	return after;

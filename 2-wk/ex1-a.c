@@ -23,9 +23,7 @@ int main(int argc, char **argv)
        		exit(1);	       
 	}
 	for  (int i = 1; i <= 5; i++){
-		// string should be: process 'pid', line 'i'
 		char line[25];
-		// int sprintf(char *restrict s, const char *restrict format, ...);
 		int written = sprintf(line, "process %d, line %d\n",pid, i);
 		write(STDOUT_FILENO, &line[0], written);
 	}

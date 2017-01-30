@@ -13,6 +13,7 @@ int main(int argc, char *argv[])
 	if (argc < 2 || argc > 3) { 
 		puts("incorrect number of arguments");
 		exit(1);
+		// what if there's only one argument?
 	}
 
 	int pid = fork();
@@ -26,7 +27,7 @@ int main(int argc, char *argv[])
 		print_lines();
 		int status;
 		wait(&status);
-		// todo find out exit status of child process
+		// todo: do we need more information?
 		if (WIFEXITED(status)!=0)
 			puts("normal exit");
 		if (WIFSIGNALED(status)!=0)

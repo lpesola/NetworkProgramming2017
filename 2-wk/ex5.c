@@ -57,9 +57,11 @@ void double_lines(int fd)
 			perror("doubler read");
 			exit(1);	
 		}
-	// write can fail too	
-		write(STDOUT_FILENO, buf, nbytes);
-		write(STDOUT_FILENO, buf, nbytes);
+		
+		if ((write(STDOUT_FILENO, buf, nbytes)) == -1)
+			perror("1st write");
+		if ((write(STDOUT_FILENO, buf, nbytes)) == -1)
+			perror("2nd write");
 	}
 }
 
@@ -68,13 +70,19 @@ void read_lines(int fd)
 	char buf[100];
 	ssize_t nbytes;
 	while ((nbytes = read(STDIN_FILENO, buf, sizeof buf))) {
-		// discard lines that are over 100 bytes long
-		//  -> if last character in buf is not \n, 
-		//  line is too long, do nothing	
-		//  -> else write to fd
+		if (nbytes == -1 && errno == EINTR)
+			continue;
+		if (nbytes == -1) {
+			perror ("read stdin");
+			exit(1);
+		}
+		/*  discard lines that are over 100 bytes long
+		 *  -> if last character in buf is not \n, 
+		 *  line is too long, do nothing	
+		 */
+
 		if (buf[nbytes-1] =='\n') {
 			write(fd, buf, nbytes);
 		}
-		// add some error handling, at least EINTR
 	}
 }

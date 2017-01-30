@@ -49,7 +49,6 @@ void double_lines(int fd)
 {
 	char buf[100];
 	int nbytes;
-	puts("doublelinse");
 	while ((nbytes = read(fd, buf, sizeof buf)) != 0) {
 		if (nbytes == -1 && errno == EINTR) {
 			continue;
@@ -68,7 +67,6 @@ void read_lines(int fd)
 {
 	char buf[100];
 	ssize_t nbytes;
-	puts("readlines");
 	while ((nbytes = read(STDIN_FILENO, buf, sizeof buf))) {
 		// discard lines that are over 100 bytes long
 		//  -> if last character in buf is not \n, 

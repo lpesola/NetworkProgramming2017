@@ -36,13 +36,11 @@ int main(int argc, char *argv[])
 	mkfifo(fifo1, 0666);
 	mkfifo(fifo2, 0666);
 	
-	puts("no files open");
 	int readfd = open(fifo1, O_RDONLY);
 	if (readfd == -1) {
 		perror("open readfd");
 		exit(1);
 	}
-	puts("writefd open");
 	int writefd = open(fifo2, O_WRONLY);
 	if (writefd == -1) {
 		perror("open writefd");
@@ -50,7 +48,7 @@ int main(int argc, char *argv[])
 		unlink(fifo2);
 		exit(1);
 	}
-	puts("before readlines");
+	
 	read_lines(writefd);
 	write_lines(readfd);
 	close(readfd);
@@ -63,7 +61,7 @@ int main(int argc, char *argv[])
 
 void read_lines(int fd) 
 {
-	puts("reading lines");
+	puts("type in text to be doubled, ctrl-D ends");
 	char buf[100];
 	ssize_t nbytes;
 	while ((nbytes = read(STDIN_FILENO, buf, sizeof buf))) {
@@ -80,7 +78,7 @@ void read_lines(int fd)
 		}
 		// add some error handling, at least EINTR
 	}
-	puts("stopped reading");
+	puts("that's all!");
 	close(fd);
 }
 
@@ -88,7 +86,6 @@ void write_lines(int fd)
 {
 	char buf[100];
 	ssize_t nbytes;
-	puts("readlines");
 	while ((nbytes = read(fd, buf, sizeof buf))) {
 		write(STDOUT_FILENO, buf, nbytes);
 		// add some error handling, at least EINTR

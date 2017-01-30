@@ -22,17 +22,14 @@ int main(int argc, char *argv[])
 	char *fifo1 = "/tmp/fifo1";
 	char *fifo2 = "/tmp/fifo2";
 
-	puts("no files open");	
 	int writefd = open(fifo1, O_WRONLY);
 	if (writefd == -1)
 		perror("open writefd");
 
-	puts("write open");
 	int readfd = open(fifo2, O_RDONLY);
 	if (readfd == -1)
 		perror("open readfd");
 
-	puts("read open");
 	/*
 	 * read line from fifo2
 	 * convert to uppercase char by char
@@ -54,11 +51,7 @@ void convert_lines(int readfd, int writefd)
 	while ((nbytes = read(readfd, buf, sizeof buf)) != 0) {
 		if (nbytes == -1 && errno == EINTR) {
 			continue;
-		} else if (nbytes == -1 && errno == EBADF) {
-			perror("doubler read eagain");
-			exit(1);
 		} else if (nbytes == -1) {
-			printf("err %d\n", errno);
 			perror("doubler read");
 			exit(1);	
 		}
@@ -66,11 +59,9 @@ void convert_lines(int readfd, int writefd)
 		char uppercase[100]; 	
 		for (int i = 0; i < nbytes; i++)
 			uppercase[i] = toupper(buf[i]);
-
-		puts("converted");
-		write(STDOUT_FILENO, uppercase, nbytes);
 		write(writefd, uppercase, nbytes);
 	}
+	puts("pipe closed; nothing more to convert");
 	close(writefd);
 	close(readfd);
 

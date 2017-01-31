@@ -76,9 +76,9 @@ void read_lines(int fd)
 			perror ("read stdin");
 			exit(1);
 		}
-		/*  discard lines that are over 100 bytes long
-		 *  -> if last character in buf is not \n, 
-		 *  line is too long, read it until the end and do nothing	
+		/*  If last character read in buf is not \n, 
+		 *  line is too long. 
+		 *  Ignore it.	
 		 */
 
 		if (buf[nbytes-1] == '\n') {

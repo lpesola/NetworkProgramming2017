@@ -50,6 +50,7 @@ int main(int argc, char *argv[])
 	
 	read_lines(readfd, writefd);
 	close(readfd);
+	close(writefd);
 
 	unlink(fifo1);
 	unlink(fifo2);
@@ -74,11 +75,11 @@ void read_lines(int readfd, int writefd)
 		// if last read character was \n, line is short enough 
 		// lines over 100 bytes must be ignored
 		if (buf[nbytes-1] =='\n') {
-			int bytessent = write(writefd, buf, nbytes);
+			int bsent = write(writefd, buf, nbytes);
 			
-			int nbytesr = read(readfd, buf, bytessent);
-			printf("received %d bytes \n", nbytesr);
-			write(STDOUT_FILENO, buf, nbytesr);
+			int bread = read(readfd, buf, bsent);
+			printf("received %d bytes \n", bread);
+			write(STDOUT_FILENO, buf, bread);
 		} else {
 			while(buf[nbytes-1] != '\n'){
 				nbytes = read(STDIN_FILENO, buf, sizeof buf);
@@ -86,8 +87,6 @@ void read_lines(int readfd, int writefd)
 		} 
 
 	}
-	close(readfd);
-	close(writefd);
 }
 
 

@@ -69,25 +69,20 @@ void read_lines(int readfd, int writefd)
 			perror ("read from pipe");
 			exit(1);
 		}
-		printf("read frmon stdin %ld bytes\n", nbytes);
+		
+		printf("read from stdin %ld bytes\n", nbytes);
 		// if last read character was \n, line is short enough 
 		// lines over 100 bytes must be ignored
 		if (buf[nbytes-1] =='\n') {
-			// send line from stdin to converter
 			int bytessent = write(writefd, buf, nbytes);
-			printf("sent %d bytes\n", bytessent);
-			// receive from fifo, write to buf
+			
 			int nbytesr = read(readfd, buf, bytessent);
 			printf("received %d bytes \n", nbytesr);
 			write(STDOUT_FILENO, buf, nbytesr);
 		} else {
-			puts("too long line wont print");
-			int btr = read(STDIN_FILENO, buf, sizeof buf);
-			while(buf[btr-1] != '\n'){
-				puts("still too long");
-				btr = read(STDIN_FILENO, buf, sizeof buf);
+			while(buf[nbytes-1] != '\n'){
+				nbytes = read(STDIN_FILENO, buf, sizeof buf);
 			}
-			puts("all too long lines read");
 		} 
 
 	}

@@ -45,7 +45,6 @@ int main(int argc, char *argv[])
 
 void convert_lines(int readfd, int writefd) 
 {
-	puts("converting");
 	char buf[100];
 	int nbytes;
 	while ((nbytes = read(readfd, buf, sizeof buf)) != 0) {
@@ -55,11 +54,17 @@ void convert_lines(int readfd, int writefd)
 			perror("doubler read");
 			exit(1);	
 		}
-	// write can fail too
 		char uppercase[100]; 	
 		for (int i = 0; i < nbytes; i++)
 			uppercase[i] = toupper(buf[i]);
-		write(writefd, uppercase, nbytes);
+	
+		int ret = write(writefd, uppercase, nbytes);
+		if (ret == -1) {
+			perror("write");
+			exit(1);
+		} else if (ret == 0) {
+			puts("no bytes written, read end closed");
+		}
 	}
 	puts("pipe closed; nothing more to convert");
 	close(writefd);

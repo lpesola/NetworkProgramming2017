@@ -15,7 +15,6 @@
 #include <sys/stat.h>
 
 void read_lines(int readfd, int writefd);
-//void write_lines(int fd);
 
 int main(int argc, char *argv[])
 {
@@ -63,35 +62,37 @@ void read_lines(int readfd, int writefd)
 	puts("type in text to be doubled, ctrl-D ends");
 	char buf[100];
 	ssize_t nbytes;
-	while ((nbytes = read(STDIN_FILENO, buf, sizeof buf))) {
-		// discard lines that are over 100 bytes long
-		//  -> if last character in buf is not \n, 
-		//  line is too long, do nothing	
-		//  -> else write to fd
+	while ((nbytes = read(STDIN_FILENO, buf, sizeof buf)) != 0) {
 		if (nbytes == -1 && errno == EINTR)
 			continue;
-		if (nbytes == -1) 
+		if (nbytes == -1) { 
 			perror ("read from pipe");
-		if (buf[nbytes-1] =='\n') {
-			write(writefd, buf, nbytes);
+			exit(1);
 		}
-		// receive and print converted line
-		int nbytesr = read(readfd, buf, nbytesr);
-		write(STDOUT_FILENO, buf, nbytesr);
-		// print it to stdout
+		printf("read frmon stdin %ld bytes\n", nbytes);
+		// if last read character was \n, line is short enough 
+		// lines over 100 bytes must be ignored
+		if (buf[nbytes-1] =='\n') {
+			// send line from stdin to converter
+			int bytessent = write(writefd, buf, nbytes);
+			printf("sent %d bytes\n", bytessent);
+			// receive from fifo, write to buf
+			int nbytesr = read(readfd, buf, bytessent);
+			printf("received %d bytes \n", nbytesr);
+			write(STDOUT_FILENO, buf, nbytesr);
+		} else {
+			puts("too long line wont print");
+			int btr = read(STDIN_FILENO, buf, sizeof buf);
+			while(buf[btr-1] != '\n'){
+				puts("still too long");
+				btr = read(STDIN_FILENO, buf, sizeof buf);
+			}
+			puts("all too long lines read");
+		} 
+
 	}
 	close(readfd);
 	close(writefd);
 }
 
-/*
-void write_lines(int fd) 
-{
-	char buf[100];
-	ssize_t nbytes;
-	while ((nbytes = read(fd, buf, sizeof buf))) {
-		write(STDOUT_FILENO, buf, nbytes);
-		// add some error handling, at least EINTR
-	}
-}
-*/
+

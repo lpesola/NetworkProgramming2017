@@ -14,8 +14,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-void read_lines(int fd);
-void write_lines(int fd);
+void read_lines(int readfd, int writefd);
+//void write_lines(int fd);
 
 int main(int argc, char *argv[])
 {
@@ -49,8 +49,7 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 	
-	read_lines(writefd);
-	write_lines(readfd);
+	read_lines(readfd, writefd);
 	close(readfd);
 
 	unlink(fifo1);
@@ -59,7 +58,7 @@ int main(int argc, char *argv[])
 }
 
 
-void read_lines(int fd) 
+void read_lines(int readfd, int writefd) 
 {
 	puts("type in text to be doubled, ctrl-D ends");
 	char buf[100];
@@ -74,14 +73,18 @@ void read_lines(int fd)
 		if (nbytes == -1) 
 			perror ("read from pipe");
 		if (buf[nbytes-1] =='\n') {
-			write(fd, buf, nbytes);
+			write(writefd, buf, nbytes);
 		}
-		// add some error handling, at least EINTR
+		// receive and print converted line
+		int nbytesr = read(readfd, buf, nbytesr);
+		write(STDOUT_FILENO, buf, nbytesr);
+		// print it to stdout
 	}
-	puts("that's all!");
-	close(fd);
+	close(readfd);
+	close(writefd);
 }
 
+/*
 void write_lines(int fd) 
 {
 	char buf[100];
@@ -91,3 +94,4 @@ void write_lines(int fd)
 		// add some error handling, at least EINTR
 	}
 }
+*/

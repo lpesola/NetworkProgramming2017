@@ -78,11 +78,21 @@ void read_lines(int fd)
 		}
 		/*  discard lines that are over 100 bytes long
 		 *  -> if last character in buf is not \n, 
-		 *  line is too long, do nothing	
+		 *  line is too long, read it until the end and do nothing	
 		 */
 
-		if (buf[nbytes-1] =='\n') {
+		if (buf[nbytes-1] == '\n') {
 			write(fd, buf, nbytes);
+		} else {
+			while(buf[nbytes-1] != '\n') {
+				nbytes = read(STDIN_FILENO, buf, sizeof buf);
+				if (nbytes == -1 && errno == EINTR)
+					continue;
+				if (nbytes == -1) {
+					perror("read too long line");
+					exit(1);
+				}
+			}
 		}
 	}
 }

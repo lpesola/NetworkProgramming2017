@@ -50,7 +50,6 @@ int do_child(char *path, char *arg)
 {	
 	printf("child pid: %d\n", getpid());
 	char *cmd[] = {path, arg, (char *)0};
-	pause();
 	int ret = execv(path, cmd);
 	return ret;
 		

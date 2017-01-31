@@ -1,10 +1,3 @@
-/*
- * Use an unnamed pipe for ipc.
- * Parent process reads lines from stdin (ignores too long lines)
- * Child process prints all the lines twice
- */
-
-
 #define _XOPEN_SOURCE
 #include <fcntl.h>
 #include <unistd.h>
@@ -17,31 +10,33 @@
 
 void convert_lines(int readfd, int writefd);
 
+
 int main(int argc, char *argv[])
 {
 	char *fifo1 = "/tmp/fifo1";
 	char *fifo2 = "/tmp/fifo2";
 
 	int writefd = open(fifo1, O_WRONLY);
-	if (writefd == -1)
+	if (writefd == -1){
 		perror("open writefd");
-
+		exit(1);
+	}
 	int readfd = open(fifo2, O_RDONLY);
-	if (readfd == -1)
+	if (readfd == -1){
+		close(writefd);
 		perror("open readfd");
-
-	/*
-	 * read line from fifo2
-	 * convert to uppercase char by char
-	 * write to fifo1
-	 * until eof
-	 * until fifo1 closed
-	 */
+		exit(1);
+	}
 
 	convert_lines(readfd, writefd);
 
 	exit(0);
 }
+
+/* Read lines from FIFO for reading, convert to uppercase.
+ * Send converted line back using FIFO for writing.
+ * The other process (reader.c) creates the FIFOs.
+ */
 
 void convert_lines(int readfd, int writefd) 
 {
@@ -62,9 +57,7 @@ void convert_lines(int readfd, int writefd)
 		if (ret == -1) {
 			perror("write");
 			exit(1);
-		} else if (ret == 0) {
-			puts("no bytes written, read end closed");
-		}
+		} 
 	}
 	puts("pipe closed; nothing more to convert");
 	close(writefd);

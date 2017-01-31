@@ -25,8 +25,10 @@ int main(int argc, char **argv)
 	}
 	else { 
 		times = atoi(argv[1]);	
-		if (times > 50)
-			exit(1);
+		if (times > 50 || times < 1) {
+			puts("permitted values 1-50");
+			exit(0);
+		}
 	}
 
 	int pid;
@@ -40,7 +42,7 @@ int main(int argc, char **argv)
 	}
 	print_lines();
 	
-	waitpid(-1, NULL ,WNOHANG);
+	waitpid(-1, NULL, WNOHANG);
 	exit(0);
 }
 void print_lines() 
@@ -49,7 +51,10 @@ void print_lines()
 	for  (int i = 1; i <= 5; i++){
 		char line[25];
 		int written = sprintf(line, "process %d, line %d\n", pid, i);
-		write(STDOUT_FILENO, &line[0], written);
+		if ((write(STDOUT_FILENO, &line[0], written)) < 0) {
+			perror("write");
+			exit(1);
+		}
 	}
 }
 

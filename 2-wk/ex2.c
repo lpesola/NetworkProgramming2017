@@ -13,7 +13,6 @@ int main(int argc, char *argv[])
 	if (argc < 2 || argc > 3) { 
 		puts("incorrect number of arguments");
 		exit(1);
-		// what if there's only one argument?
 	}
 
 	int pid = fork();
@@ -21,17 +20,17 @@ int main(int argc, char *argv[])
 		perror("fork");
 		exit(1);
 	} else if (pid == 0) {
-		if((do_child(argv[1], argv[2])==-1))
+		// if there optional arg is not provided, exec will get null
+		if ((do_child(argv[1], argv[2]) == -1))
 			perror("execv");
 	} else {
 		print_lines();
 		int status;
 		wait(&status);
-		// todo: do we need more information?
-		if (WIFEXITED(status)!=0)
-			puts("normal exit");
-		if (WIFSIGNALED(status)!=0)
-			puts("terminated by a signal not caught");
+		if (WIFEXITED(status) != 0)
+			printf("\nnormal exit: %d\n", WEXITSTATUS(status));
+		if (WIFSIGNALED(status) != 0)
+			printf("\nterminated by a signal not caught: %d\n", WTERMSIG(status));
 	} 
 	
 	exit(0);
@@ -49,7 +48,9 @@ void print_lines()
 
 int do_child(char *path, char *arg)
 {	
+	printf("child pid: %d\n", getpid());
 	char *cmd[] = {path, arg, (char *)0};
+	pause();
 	int ret = execv(path, cmd);
 	return ret;
 		

@@ -24,7 +24,7 @@ int main(int argc, char **argv)
 	}
 	for  (int i = 1; i <= 5; i++){
 		char line[25];
-		int written = sprintf(line, "process %d, line %d\n", pid, i);
+		int written = sprintf(line, "process %d, line %d\n", getpid(), i);
 		if ((write(STDOUT_FILENO, &line[0], written)) < 0) {
 			perror("write");
 			exit(1);

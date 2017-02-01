@@ -17,19 +17,7 @@
 void read_lines(int readfd, int writefd);
 
 int main(int argc, char *argv[])
-{
-	
-	/*
-	 * create fifos 1, 2
-	 *
-	 * read line from stdin to buf
-	 * write buf to fifo1 until eof
-	 *
-	 * read line from fifo2
-	 * write to stdout
-	 * until fifo2 closed
-	 */
-
+{	
     	char *fifo1 = "/tmp/fifo1";
 	char *fifo2 = "/tmp/fifo2";
 	mkfifo(fifo1, 0666);

@@ -71,14 +71,16 @@ void read_lines(int readfd, int writefd)
 			exit(1);
 		}
 		
-		printf("read from stdin %ld bytes\n", nbytes);
-		// if last read character was \n, line is short enough 
-		// lines over 100 bytes must be ignored
+		/* Lines over 100 bytes must be ignored
+		 * If last read character was \n, line is short enough
+		 * -> this works because small (<PIPE_BUF) writes/reads
+		 *  are atomic on FIFOs
+		 */
+		
 		if (buf[nbytes-1] =='\n') {
 			int bsent = write(writefd, buf, nbytes);
 			
 			int bread = read(readfd, buf, bsent);
-			printf("received %d bytes \n", bread);
 			write(STDOUT_FILENO, buf, bread);
 		} else {
 			while(buf[nbytes-1] != '\n'){

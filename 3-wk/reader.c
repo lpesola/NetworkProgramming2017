@@ -35,7 +35,7 @@ void read_lines(int writefd)
 	char writebuf[100];
 	ssize_t nbytes;
 	int len = 0;
-	int toolong = 0;
+	int longline = 0;
 	int j = 0;
 	while ((nbytes = read(STDIN_FILENO, readbuf, sizeof readbuf)) != 0) {
 		if (nbytes == -1 && errno == EINTR)
@@ -51,8 +51,8 @@ void read_lines(int writefd)
 			len +=1;
 			j += 1;
 			if (readbuf[i] == '\n') {
-				if (toolong == 1) {
-					toolong = 0;
+				if (longline == 1) {
+					longline = 0;
 					len = 0;
 					j = 0;	
 				} else {
@@ -64,7 +64,7 @@ void read_lines(int writefd)
 			if (len > 100) {
 				j = 0;
 				len = 0;
-				toolong = 1;
+				longline = 1;
 			}
 
 		}

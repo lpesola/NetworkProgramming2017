@@ -31,8 +31,8 @@ int main(int argc, char *argv[])
 void read_lines(int writefd) 
 {
 	puts("type in text to be doubled, ctrl-D ends");
-	char readbuf[200];
-	char writebuf[200];
+	char readbuf[100];
+	char writebuf[100];
 	ssize_t nbytes;
 	int len = 0;
 	int toolong = 0;

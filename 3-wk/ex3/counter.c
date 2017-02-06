@@ -56,14 +56,14 @@ int main(int argc, char **argv)
 		exit(1); 
 	}
 
+	ftruncate(fd, sizeof(ct));
 	ct = mmap(NULL, sizeof(ct), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-	ct->c = 0;
-	
-
 	if (ct == MAP_FAILED) {
 		perror("mmap failed"); 
 		exit(1); 
 	}
+	ct->c = 0;
+	
 	close(fd);
 
 	pid = getpid();
@@ -84,8 +84,15 @@ int main(int argc, char **argv)
 	}
 
 	puts("char table");
-	for (int i = 0; i < nloop; i++)
-		printf("%d: %c\n", i, ct->names[i]);			
+	char n = ct->names[0];
+	char *ptr = &ct->names[0];
+	int i = 0;
+	while (n != '\0') {
+		printf("%d: %c\n", i, n);
+		ptr++;
+		n = *ptr;
+		i++;
+	}
 
 
 	exit(0);

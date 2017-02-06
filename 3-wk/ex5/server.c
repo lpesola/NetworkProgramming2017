@@ -29,15 +29,13 @@ int main(int argc, char *argv[])
 	}
 	int maxbytes = atoi(argv[1]);
 
-	struct sockaddr_in cli_addr, serv_addr;
 	int lstnsock = socket(PF_INET, SOCK_STREAM, PF_UNSPEC);
 	if (lstnsock < 0) {
 		perror("socket");
 		exit(1);
 	}
 
-
-	bzero((void*) &serv_addr, sizeof(serv_addr));
+	struct sockaddr_in serv_addr = {0};
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	serv_addr.sin_port = htons(PORT);
@@ -49,7 +47,8 @@ int main(int argc, char *argv[])
 
 	listen(lstnsock, 2);
 
-	for (;;) {
+	for (;;) {	
+		struct sockaddr_in cli_addr = {0};
 		socklen_t clilen = sizeof(cli_addr);
 		int newsockfd = accept(lstnsock, (struct sockaddr*)&cli_addr, &clilen);
 		if (newsockfd < 0) {

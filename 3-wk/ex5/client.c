@@ -27,10 +27,8 @@ int main(int argc, char *argv[])
 		puts("usage: ./reader <ipaddr> datasize writesize");
 		exit(1);
 	}
-
 	int datasize = atoi(argv[2]);
 	int writesize = atoi(argv[3]);
-	struct sockaddr_in serv_addr;
 
 	int sockfd = socket(PF_INET, SOCK_STREAM, PF_UNSPEC);
 	if (sockfd < 0) {
@@ -38,11 +36,10 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	memset(&serv_addr, 0, sizeof(serv_addr));
-
+	struct sockaddr_in serv_addr = {0};
 	serv_addr.sin_family = AF_INET;
 	//convert IP address to correct form
-	inet_aton(argv[1], &serv_addr.sin_addr);
+	inet_pton(AF_INET, argv[1], &serv_addr.sin_addr);
 	serv_addr.sin_port = htons(PORT);
 
 	if(connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0){

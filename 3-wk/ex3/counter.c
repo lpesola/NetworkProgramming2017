@@ -31,21 +31,20 @@ void my_lock_release();
  * using the counter value as the index
  */
 
-struct cinfo {
-	int counter;
-	char table[];
+struct counter {
+	int c;
+	char names[];
 };
 
 int main(int argc, char **argv)
 {
-	int fd, i, nloop, zero = 0;
-	int *ptr;
+	int fd, nloop;
 	pid_t pid;
 	char name;
-	struct cinfo *counter;
+	struct counter *ct;
 
 	if (argc != 3) {
-		perror("usage: incr2 <#loops> <#name>"); 
+		puts("usage: incr2 <#loops> <#name>"); 
 		exit(1); 
 	}
 	nloop = atoi(argv[1]);
@@ -56,11 +55,12 @@ int main(int argc, char **argv)
 		perror("open failed"); 
 		exit(1); 
 	}
-	
-	counter = mmap(NULL, sizeof(counter), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-	counter->counter = 0;
 
-	if (ptr == MAP_FAILED) {
+	ct = mmap(NULL, sizeof(ct), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+	ct->c = 0;
+	
+
+	if (ct == MAP_FAILED) {
 		perror("mmap failed"); 
 		exit(1); 
 	}
@@ -73,21 +73,19 @@ int main(int argc, char **argv)
 	setbuf(stdout, NULL);	/* stdout is unbuffered */
 
 	sleep(2);
-	for (i = 0; i < nloop; i++) {
-		my_lock_wait();
-		int temp = counter->counter++;
-		printf("process %d: %d\n", pid, temp);
-		counter->table[temp] = name;
 
-		// the last one to write prints the table
-		if (temp == (nloop*2)-1) {
-			puts("char table");
-			for (int i = 0; i < nloop*2; i++)
-				printf("%d: %c\n", i, counter->table[i]);
-		}			
+	for (int i = 0; i < nloop; i++) {
+		my_lock_wait();
+		int tmp = ct->c++;
+		printf("process %d: %d\n", pid, tmp);
+		ct->names[tmp] = name;
 		usleep(200000);
 		my_lock_release();
 	}
+
+	puts("char table");
+	for (int i = 0; i < nloop; i++)
+		printf("%d: %c\n", i, ct->names[i]);			
 
 
 	exit(0);

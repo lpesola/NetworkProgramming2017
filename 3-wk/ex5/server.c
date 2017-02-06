@@ -83,7 +83,6 @@ void read_lines(int readfd, int maxbytes)
 			perror("doubler read");
 			exit(1);	
 		}
-
 	}
 	puts("done reading");
 	close(readfd);

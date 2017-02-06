@@ -28,7 +28,9 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 	int datasize = atoi(argv[2]);
+	printf("data: %d\n", datasize);
 	int writesize = atoi(argv[3]);
+	printf("writesize: %d\n", writesize);
 
 	int sockfd = socket(PF_INET, SOCK_STREAM, PF_UNSPEC);
 	if (sockfd < 0) {
@@ -59,20 +61,18 @@ void send_data(int writefd, int datasize, int writesize)
 	char data[datasize]; 
 	ssize_t nbytes;
 
-	// generate random data to send
+	// generate some data to send
 	// data doesn't need to be truly random or in any way meaningful
-	srand(10);
-	for (int i = 0; i < datasize; i++) {
-		int random_int = 26 * (rand() / RAND_MAX + 1.0) + 97;
-		data[i] = (char) random_int;	
-	}
+	memset(&data, 2, datasize);
 
-	nbytes = write(writefd, &data, writesize);
-	if (nbytes < 0) {
-		perror("write");
-		exit(1);
+	for (int i = 0; i < datasize; i++) {
+		nbytes = write(writefd, &data[i], writesize);
+		if (nbytes < 0) {
+			perror("write");
+			exit(1);
+		}
+		i += writesize;
 	}
-	
 }
 
 

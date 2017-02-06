@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 	}
 	
 
-	// uhhh check this, maybe needs to be longer, char*nloop?
+	// maybe we need to bzero the whole thing?
 	// this is used to initialize ptr as 0?
 	if (write(fd, &zero, sizeof(int)) <0) {
 		perror("write failed"); 
@@ -65,17 +65,17 @@ int main(int argc, char **argv)
 	
 	ptr = mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 	// chartable should be "adjacent" to ptr
-
-	size_t len = nloop * sizeof(char)*40;
 	void *addr = ptr + 1;
-	printf("ptr: %p\n", (void*) ptr);
-	printf("addr: %p\n", (void*) addr);
-	ptr--;	
-	chartable = mmap(addr, len, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+	// both processes write nloop times -> 2 * nloop needed
+	size_t len = nloop * 2  * sizeof(char);
 
-	printf("ptr address: %p & size %ld\n", (void*) &ptr, sizeof(int));
-	printf("chartable address %p & size %ld \n", (void*) &chartable, len);
-	printf("addr: %p\n", (void*) &addr);
+	// there should be some kind of offset probably 
+	//off_t offset = sysconf(_SC_PAGESIZE);
+	off_t offset = 0;
+	printf("chartables addr to be: %p\n", (void*) addr);
+	printf("ptrs addr            : %p\n", (void*) ptr);
+	
+	chartable = mmap(addr, len, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset);
 
 	if (ptr == MAP_FAILED || chartable == MAP_FAILED) {
 		perror("mmap failed"); 

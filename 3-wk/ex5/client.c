@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <strings.h>
+#include <string.h>
 #include <sys/errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -30,16 +30,15 @@ int main(int argc, char *argv[])
 
 	int datasize = atoi(argv[2]);
 	int writesize = atoi(argv[3]);
-	int sockfd;
 	struct sockaddr_in serv_addr;
 
-	sockfd = socket(PF_INET, SOCK_STREAM, PF_UNSPEC);
+	int sockfd = socket(PF_INET, SOCK_STREAM, PF_UNSPEC);
 	if (sockfd < 0) {
 		perror("socket");
 		exit(1);
 	}
 
-	bzero((void*)&serv_addr, sizeof(serv_addr));
+	memset(&serv_addr, 0, sizeof(serv_addr));
 
 	serv_addr.sin_family = AF_INET;
 	//convert IP address to correct form
@@ -57,12 +56,6 @@ int main(int argc, char *argv[])
 
  	exit(0);
 }
-
-/*
- * Read text from stdin. 
- * Write all lines 100 bytes or less to socket for further processing.
- * Longer lines are ignored.
- */
 
 void send_data(int writefd, int datasize, int writesize) 
 {

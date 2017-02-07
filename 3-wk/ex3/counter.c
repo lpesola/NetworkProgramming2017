@@ -56,7 +56,8 @@ int main(int argc, char **argv)
 		exit(1); 
 	}
 
-	size_t size = sizeof(ct) + 10 * sizeof(char);
+	// just some size for testing purposes
+	size_t size = sizeof(ct) + 100 * sizeof(char);
 	ftruncate(fd, size);
 	ct = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 	memset(ct, 0, size);
@@ -81,8 +82,8 @@ int main(int argc, char **argv)
 		int tmp = ct->c++;
 		printf("%d. process %d: %d\n", i, pid, tmp);
 		ct->names[tmp] = name;
-		usleep(200000);
-//		my_lock_release();
+		usleep(10000);
+		my_lock_release();
 	}
 
 	puts("char table");

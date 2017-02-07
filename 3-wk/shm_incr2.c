@@ -9,7 +9,7 @@
 #include "lock_fcntl.c"
 #define FILE_MODE       (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)
 			/* default permissions for new files */
-#define LOCKFILE       "/tmp/MKLCKXXXXXX" 
+#define LOCKFILE "MKLCK.ex6"  
 #define MAPPED_FILE "temp.txt"
 void my_lock_init(char *pathname);
 void my_lock_wait();

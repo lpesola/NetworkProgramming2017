@@ -56,8 +56,10 @@ int main(int argc, char **argv)
 		exit(1); 
 	}
 
-	ftruncate(fd, sizeof(ct));
-	ct = mmap(NULL, sizeof(ct), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+	size_t size = sizeof(ct) + 10 * sizeof(char);
+	ftruncate(fd, size);
+	ct = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+	memset(ct, 0, size);
 	if (ct == MAP_FAILED) {
 		perror("mmap failed"); 
 		exit(1); 
@@ -77,16 +79,17 @@ int main(int argc, char **argv)
 	for (int i = 0; i < nloop; i++) {
 		my_lock_wait();
 		int tmp = ct->c++;
-		printf("process %d: %d\n", pid, tmp);
+		printf("%d. process %d: %d\n", i, pid, tmp);
 		ct->names[tmp] = name;
 		usleep(200000);
-		my_lock_release();
+//		my_lock_release();
 	}
 
 	puts("char table");
 	char n = ct->names[0];
 	char *ptr = &ct->names[0];
 	int i = 0;
+	
 	while (n != '\0') {
 		printf("%d: %c\n", i, n);
 		ptr++;

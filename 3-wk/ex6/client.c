@@ -66,25 +66,24 @@ int main(int argc, char *argv[])
 
 void send_data(int writefd, int datasize, int writesize) 
 {
-	char data[datasize]; 
+	char data[writesize]; 
 	ssize_t nbytes;
 
 	// generate some data to send
 	// data doesn't need to be truly random or in any way meaningful
-	memset(&data, 2, datasize);
 
 	struct timespec before, after;
 	clock_gettime(CLOCK_MONOTONIC, &before);
-	for (int i = 0; i < datasize; i++) {
-		nbytes = write(writefd, &data[i], writesize);
+	for (int i = 0; i < datasize; i+= writesize) {
+		memset(&data, 2, writesize);
+		nbytes = write(writefd, data, writesize);
 		if (nbytes < 0) {
 			perror("write");
 			exit(1);
 		}
-		i += writesize;
 	}
 	clock_gettime(CLOCK_MONOTONIC, &after);
-	puts("Data sent in in");
+	puts("Data sent in");
 	printf("%ld s and %ld ns\n", after.tv_sec-before.tv_sec, after.tv_nsec-before.tv_nsec);
 
 

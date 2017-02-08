@@ -58,20 +58,19 @@ int main(int argc, char *argv[])
 
 void send_data(int writefd, int datasize, int writesize) 
 {
-	char data[datasize]; 
+	char data[writesize]; 
 	ssize_t nbytes;
 
 	// generate some data to send
 	// data doesn't need to be truly random or in any way meaningful
-	memset(&data, 2, datasize);
 
-	for (int i = 0; i < datasize; i++) {
-		nbytes = write(writefd, &data[i], writesize);
+	for (int i = 0; i < datasize; i += writesize) {
+		memset(&data, 2, writesize);
+		nbytes = write(writefd, data, writesize);
 		if (nbytes < 0) {
 			perror("write");
 			exit(1);
 		}
-		i += writesize;
 	}
 }
 

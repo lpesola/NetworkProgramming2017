@@ -9,25 +9,16 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
-#define BUFSIZE 1000
+#define BUFSIZE 100
 #define SERV_ADDR "ukko128.cs.helsinki.fi"
 
 void echo(int fd);
 
-int main(int argc, char **argv) {
+int main(void) {
 
-	/* create socket
-	 * check the service echo
-	 *  -> correct port / host
-	 *  -> ukko128.cs.helsinki.fi
-	 * connect to server
-	 * read line from stdin
-	 * write line in socket
-	 * read line from socket
-	 * writ line to stdout
-	 * repeat until EOF
-	 * test on 
-	 * ukko126.cs.helsinki.fi
+	/* Wk 4 / ex 2. 
+	 * Create echoclient
+	 * Check correct port and host for service "echo"
 	 */ 
 
 	struct servent *service = getservbyname("echo", "tcp");
@@ -49,13 +40,9 @@ int main(int argc, char **argv) {
 	inet_aton(host->h_addr_list[0], &iaddr);
 	addr.sin_addr = iaddr;
 	int sockfd = socket(host->h_addrtype, SOCK_STREAM, PF_UNSPEC);
-/*	if (bind(sockfd, (struct sockaddr *)&addr, sizeof addr) < 0) {
-		perror("bind");
-		exit(1);
-	}*/
 
 	if (connect(sockfd, (struct sockaddr *)&addr, sizeof addr) < 0) {
-		perror("bind");
+		perror("connect");
 		exit(1);
 	}
 
@@ -66,31 +53,19 @@ int main(int argc, char **argv) {
 	exit(0);
 }
 
-void echo(int fd) {
 
-	/*
-	 * read BUFSIZE from stdin until '\n'
-	 * write BUFSIZE in socket until \n
-	 * read BUFSIZE  from socket until \n
-	 * write BUFSIZE to stdout until \n
-	 * repeat until EOF
-	 */
-
-	char buf[BUFSIZE];
-	char wrbuf[BUFSIZE];
-	int nbytes;
-	while(fgets(wrbuf, BUFSIZE, STDIN_FILENO) != NULL) {
-		write(fd, wrbuf, strlen(wrbuf));
-		nbytes = read(fd, buf, BUFSIZE);
-		write(STDOUT_FILENO, buf, nbytes);
-
-	}
-
-
-
+void echo(int fd) 
+{
 	
+	
+	puts("type in text to be echoed, ctrl-D ends");
+	char rbuf[BUFSIZE];
+	char wbuf[BUFSIZE];	
+
+	while (fgets(rbuf, BUFSIZE, stdin) != NULL) {
+		write(fd, rbuf, strlen(rbuf));
+		ssize_t rbytes = read(fd, wbuf, sizeof wbuf);
+		write(STDOUT_FILENO, wbuf, rbytes);
+	}
 }
-
-
-
 

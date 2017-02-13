@@ -6,16 +6,12 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdio.h>
-#include "lock_fcntl.c"
+#include <string.h>
 #define FILE_MODE (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) /* default permissions for new files */
-#define LOCKFILE "/tmp/MKLCKXXXXXX" 
 #define MAPPED_FILE "temp.txt"
 #define FIFO1 "/tmp/fifo.1"
 #define FIFO2 "/tmp/fifo.2"
 
-void my_lock_init(char *pathname);
-void my_lock_wait();
-void my_lock_release();
 
 /* Ex. 3 & 4.
  * Like wk3/ex3 but there are only two processes, A & B
@@ -58,45 +54,55 @@ int main(int argc, char **argv)
 	close(fd);
 
 	int readfd, writefd;
-	char buf[1];
-	buf[0] = name;
 	if (name == 'A') {
 		mkfifo(FIFO1, 0666);
 		mkfifo(FIFO2, 0666);
 		readfd = open(FIFO1, O_RDONLY);
 		writefd = open(FIFO2, O_WRONLY);
-
-		for (int i = 0; i < nloop; i++) {
-			if (read(readfd, buf, sizeof buf) < 0) {
-				perror("read");
-				exit(1);
-			}
-			int tmp = ct->c++;
-			printf("%d\n", tmp);	
-			ct->names[tmp] = name;		
-			if (write(writefd, buf, sizeof buf) < 0) {
-				perror("write");
-				exit(1);
-			}
-		}
 	} else {
 		writefd = open(FIFO1, O_WRONLY);
 		readfd = open(FIFO2, O_RDONLY);
-		for (int i = 0; i < nloop; i++) {			
-			if (write(writefd, buf, sizeof buf) < 0) {
-				perror("write");
-				exit(1);
-			}	
+	}
+
+	char buf[1];
+	buf[0] = name;
+
+	/* A waits for a message from B before writing its name in the table.
+	 * When it's done, it messages B to let it know it's B's turn.
+	 * Reads block unless otherwise specified, so names are written
+	 * in the correct (albeit always in the same) order. 
+	 */
+	for (int i = 0; i < nloop; i++) {
+		if (name == 'A') {	
 			if (read(readfd, buf, sizeof buf) < 0) {
 				perror("read");
 				exit(1);
 			}
-			int tmp = ct->c++;
-			printf("%d\n", tmp);	
-			ct->names[tmp] = name;			
+		} else if (name == 'B') {	
+			if (write(writefd, buf, sizeof buf) < 0) {
+				perror("write");
+				exit(1);
+			}		
+			if (read(readfd, buf, sizeof buf) < 0) {
+				perror("read");
+				exit(1);
+			}
+		} else {
+			puts("name should be A or B");
+			exit(0);
 		}
-	}
+		int tmp = ct->c++;
+		printf("%d\n", tmp);	
+		ct->names[tmp] = name;			
 
+		if (name == 'A') {	
+			if (write(writefd, buf, sizeof buf) < 0) {
+				perror("write");
+				exit(1);
+			}
+		}
+
+	}
 
 	close(writefd);
 	close(readfd);

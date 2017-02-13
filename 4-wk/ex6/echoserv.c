@@ -21,7 +21,9 @@ int main(void) {
 		perror("socket");
 		exit(1);
 	}
-	
+// 6b) with SO_REUSEADDR the server can be restarted without bind failing
+	setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int));
+
 	struct sockaddr_in addr = {0};
 	addr.sin_family = AF_INET;
 	inet_aton(ADDR, &addr.sin_addr); 

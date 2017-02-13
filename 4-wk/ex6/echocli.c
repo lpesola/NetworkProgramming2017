@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#include <signal.h>
 #define BUFSIZE 100
 #define SERV_ADDR "127.0.0.1"
 #define PORT 50800
@@ -21,7 +22,7 @@ int main(void) {
 	 * Test echo server.
 	 */ 
 
-
+	signal(SIGPIPE, SIG_IGN);
 	int sockfd = socket(PF_INET, SOCK_STREAM, PF_UNSPEC);
 	if (sockfd < 0) {	
 		perror("socket");
@@ -55,8 +56,21 @@ void echo(int fd)
 	char wbuf[BUFSIZE];	
 
 	while (fgets(rbuf, BUFSIZE, stdin) != NULL) {
-		write(fd, rbuf, strlen(rbuf));
+		if (write(fd, rbuf, strlen(rbuf)) < 0) {
+			if (errno == EINTR) 
+				continue;
+			if (errno == EPIPE) 
+				perror("communication terminated");
+			else
+				perror("write socket");
+			exit(1);
+		} 
+
 		ssize_t rbytes = read(fd, wbuf, sizeof wbuf);
+		if (rbytes < 0) {
+			perror("read socket");
+			exit(1);
+		}
 		write(STDOUT_FILENO, wbuf, rbytes);
 	}
 }

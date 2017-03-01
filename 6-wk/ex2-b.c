@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
-#define PORT 13
+#define PORT 7
 #define SERVER "ukko127.cs.helsinki.fi"
 
 
@@ -22,22 +22,32 @@
  * What if the host is not connected to the network at all?
  */
 
-int main(void)
+int main(int argc, char *argv[])
 {
+	if (argc < 2) {
+		puts("usage ./ex2-b <addr>");
+		exit(0);
+	} 
+	char *server = argv[1];
 
-
-	struct hostent *host = gethostbyname(SERVER);
-	if (host == NULL) {
-		puts("gethostbyname failed");
-		exit(1);
+	struct hostent *host;
+    	if ((host = gethostbyname(server)) == NULL) {
+		herror("gethostbyname");
+		return 2;
 	}
+	struct in_addr **addr_list = (struct in_addr **) host->h_addr_list;
+  	  for(int i = 0; addr_list[i] != NULL; i++) {
+	            printf("%s ", inet_ntoa(*addr_list[i]));
+		        }
 
 	struct sockaddr_in serv_addr = {0};
 	serv_addr.sin_family = host->h_addrtype;
 	serv_addr.sin_port = htons(PORT);
-	//convert IP address to correct form
-	inet_aton(host->h_addr_list[0], &serv_addr.sin_addr);
+	bcopy(host->h_addr, &serv_addr.sin_addr, host->h_length);
+
 	int sockfd = socket(host->h_addrtype, SOCK_DGRAM, PF_UNSPEC);
+
+	printf("address resolved to %s \n", inet_ntoa(serv_addr.sin_addr));
 
 	if(connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0){
 		perror("connect");
@@ -60,8 +70,22 @@ int main(void)
 	 */
 
 	char *msg = "hi";
-	send(sockfd, msg, sizeof(msg), 0);
+	int sent = send(sockfd, msg, sizeof(msg), 0);
+	if (sent < 0) {
+		printf("error: %s\n", strerror(errno));
+	} else {
+		puts("sent msg");
+	}
+	
+	char recvd[10];
+	int rb = recv(sockfd, recvd, sizeof(recvd), 0);
+	if (rb < 0) {
+		printf("error: %s\n", strerror(errno));
+	} else {
+		printf("%s\n", recvd);
+	}
+	
+	exit(0);
 
- 	exit(0);
 
 }

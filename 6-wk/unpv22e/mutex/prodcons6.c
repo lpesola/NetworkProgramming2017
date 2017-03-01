@@ -36,16 +36,16 @@ main(int argc, char **argv)
 	int cthreads = min(atoi(argv[3]), MAXCTHREADS);
 	int ccount[cthreads];
 
-	Set_concurrency(nthreads + 1);
+	Set_concurrency(nthreads + cthreads);
 		/* 4create all producers and one consumer */
 	for (i = 0; i < nthreads; i++) {
 		count[i] = 0;
 		Pthread_create(&tid_produce[i], NULL, produce, &count[i]);
 	}
 
-	for (i = 0; i < nthreads; i++) {
+	for (i = 0; i < cthreads; i++) {
 		ccount[i] = 0;
-		Pthread_create(&tid_consume[i], NULL, produce, &ccount[i]);
+		Pthread_create(&tid_consume[i], NULL, consume, &ccount[i]);
 	}
 
 		/* wait for all producers and the consumer */

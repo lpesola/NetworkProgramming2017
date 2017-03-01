@@ -3,7 +3,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <strings.h>
 #include <sys/errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -37,10 +36,12 @@ int main(int argc, char *argv[])
 	serv_addr.sin_port = htons(PORT);
 
 	// start from message size, which should be a positive integer
-	// find out first if that is too large: if yes, halve it until it's not
-	// then increase the size by 1 until sending fails due to size
-	// we could just increase by 1 from 0 but that's not really necessary since we can guess at the maximum size
-	
+	// find out first if that is too large: if yes, decrease it by one until it's not
+	// if not, then increase the size by 1 until sending fails due to size
+	// we can pretty well guess the right size of which 
+	// udp headers are 8 bytes, ipv4 headers without options 20 bytes 
+	// a datagram may be up to 65535 so eg. 65000 should be a safe place to start
+
 	size_t bufsize = atoi(argv[2]);	
 	char buf[bufsize];
 	int sent = sendto(sockfd, buf, bufsize, 0, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
@@ -58,7 +59,8 @@ int main(int argc, char *argv[])
 		exit(0);
 	}
 
-
+	
+	printf("%zd was small enough, increasing.\n", bufsize);			
 	do {	
 		char buf[bufsize++];
 		printf("size: %ld \n", bufsize);
@@ -67,8 +69,10 @@ int main(int argc, char *argv[])
 			continue;
 	} while (sent > 0);
 
+	// here we know the last bufsize was too big and the one before that was the maximum
 	if (sent == -1 && errno == EMSGSIZE) {
-		printf("maxsize = %ld \n", bufsize--);	
+		bufsize = bufsize - 1;
+		printf("maxsize = %ld \n", bufsize);	
 	}
 
  	exit(0);

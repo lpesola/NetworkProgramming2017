@@ -41,17 +41,31 @@ int main(int argc, char *argv[])
 	// then increase the size by 1 until sending fails due to size
 	// we could just increase by 1 from 0 but that's not really necessary since we can guess at the maximum size
 	
-	size_t bufsize = atoi(argv[2]);
+	size_t bufsize = atoi(argv[2]);	
+	char buf[bufsize];
+	int sent = sendto(sockfd, buf, bufsize, 0, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
 	
-	int sent = 0;
+	if (sent == -1 && errno == EMSGSIZE) {
+		printf("%zd was too big, decreasing.\n", bufsize);			
+		do {	
+			char buf[bufsize--];
+			printf("size: %ld \n", bufsize);
+			sent = sendto(sockfd, buf, bufsize, 0, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
+			if (sent == -1 && errno == EINTR)
+				continue;
+		} while (sent == -1 && errno == EMSGSIZE);
+		printf("maxsize = %ld \n", bufsize);	
+		exit(0);
+	}
+
+
 	do {	
-		char buffer[bufsize++];
+		char buf[bufsize++];
 		printf("size: %ld \n", bufsize);
-		sent = sendto(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
+		sent = sendto(sockfd, buf, bufsize, 0, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
 		if (sent == -1 && errno == EINTR)
 			continue;
 	} while (sent > 0);
-
 
 	if (sent == -1 && errno == EMSGSIZE) {
 		printf("maxsize = %ld \n", bufsize--);	

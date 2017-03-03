@@ -8,10 +8,13 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <ctype.h> // for uppercase conversion
 #define LSTNPORT 22047 
-#define SOURCECODE "kurssit/netwprog/project/unix_tl.c"
+#define SOURCECODE "kurssit/netwprog/project/unix_tl.c\n"
+
 void serve();
 void create_servers();
+void send_file(char *line);
 
 int main (void) {
 
@@ -106,7 +109,11 @@ int main (void) {
 }
 
 
-
+/* 
+ * Listen to the port specified.
+ * For a new child server to serve each new client.
+ * todo: This child needs to be terminated somehow  
+ */
 void create_servers(int port) {
 
 	int listnsock = socket(PF_INET, SOCK_STREAM, PF_UNSPEC);
@@ -126,7 +133,8 @@ void create_servers(int port) {
 	}
 	listen(listnsock, 2);
 
-	for (;;) {
+	// for testing purposes only accept once
+	for (int i = 0; i < 3; i++) {
 		struct sockaddr_in cli_addr;
 		socklen_t clilen = sizeof(cli_addr);
 		int clisock = accept(listnsock, (struct sockaddr*)&cli_addr, &clilen);
@@ -146,33 +154,110 @@ void create_servers(int port) {
 	}
 
 }
-
-/* commands needed
- * # -> comment
- * E -> echo
- * C -> send path name
- * F -> send file to port, also filesize first as reply
- * A -> we're ready, can quit
- * Q -> quit this connection? THIS?
+/* read a line (ends in \n) into the buffer
+ * then figure out the correct command
+ * and call the appropriate function
+ * expecting that the lines are not horribly long > 10k characters
+ * this of course is not a safe assumption under normal conditions
  */
-
 void serve(int sockfd) {
 	int nbytes;
-	// assuming messages are pretty small
-	char readbuf[1000];
-	
+	char readbuf[10000];
+	char writebuf[10000];
+	char line[10000];
+	// current position in writebuf; stored here in case the whole message
+	// is not read in one read
+	int j = 0;
+	// if this is 0, the previous read didn't contain a newline
+	// otherwise contains a command
+	char cmd = 0;
+	char *newline = NULL;
 	while((nbytes = read(sockfd, readbuf, sizeof readbuf)) != 0) {
 		if (nbytes == -1 && errno == EINTR)
 			continue;
-
 		if (nbytes == -1) {
-			perror("reading from client, this child stops");
+			perror("this child stops (can be intentional) : ");
 			break;
 		}
-		printf("%d, NEW ROUND\n", getpid());
-		// write out everything we got
-		write(STDOUT_FILENO, readbuf, nbytes);
+	
+
+		/* this still expects that after a newline there is nothing!!!
+		 * that seemed to be the case but cant be sure..
+		 */
+
+		strncpy(&line[j], readbuf, nbytes); 
+		char *n_exists = strchr(readbuf, '\n');
+		j += nbytes;
+		if (n_exists != NULL) {
+			// a line ended during this read
+			// check the command
+			puts("HERE ENDED A LINE!!!!!!!!");
+			cmd = line[0];
+		} else {
+			continue;
+		}	
+
+
+		switch(cmd) {
+			case '#':
+				// this is a comment: ignore but print
+				// expect everything to be read in one read...
+				puts("THE FOLLOWING LINE WAS IGNORED");
+				write(STDOUT_FILENO, line, j);
+				puts("THAT WAS AN IGNORED LINE");
+				break;
+			case 'E':
+				for (int i = 0; i < j; i++) {
+					writebuf[i] = toupper(line[i]);
+				}
+				puts("ECHO THIS LINE:");
+				write(STDOUT_FILENO, writebuf, j);
+				write(sockfd, writebuf, j);
+				puts("THAT LINE WAS ECHOED TO THE SENDER");
+				break;
+			case 'C':
+			        write(sockfd, SOURCECODE, sizeof SOURCECODE);
+				break;
+			case 'F':
+				// maybe check that the file requested makes some sense
+				// =>the program source code and not /etc/passwd
+				// or some other silly thing
+				send_file(readbuf);
+				break;
+			case 'A':
+				puts("Everything done; can quit");
+				break;
+			case 'Q':
+				// quit this connection?
+				close(sockfd);
+				break;
+			default:
+				printf("incorrect command: %c \n", cmd);
+				exit(1);
+
+		}
+		// if we are here, we've finished reading and handling a line
+		// make sure readbuf and line are empty
+		memset(readbuf, 0, sizeof readbuf);
+		memset(line, 0, sizeof line);
+		memset(writebuf, 0, sizeof writebuf);
+		j = 0;
+		
 	}
 
+
+}
+
+
+void send_file(char *line) {
+
+	/*
+	 * find out name of file
+	 * find out port
+	 * reply with size
+	 * connect to port
+	 * send file
+	 * close socket
+	 */
 
 }

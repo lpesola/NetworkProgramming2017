@@ -48,12 +48,20 @@ int main (int argc, char *argv[]) {
 	int rb = read(sockfd, buf, sizeof buf);
 	write(STDOUT_FILENO, buf, rb); 
 	
-	char *msg = "HELLO UNIX_TL server";
+	char msg[] = "HELLO\n";
 	write(sockfd, msg, sizeof msg);
-	
+
 	rb  = read(sockfd, buf, sizeof buf);
 	write(STDOUT_FILENO, buf, rb); 
 
+	char name[] = "this is LPESOLA client\n";
+	int sb = send(sockfd, name, sizeof name, 0);
+
+	rb  = read(sockfd, buf, sizeof buf);
+	write(STDOUT_FILENO, buf, rb); 
+
+	rb  = read(sockfd, buf, sizeof buf);
+	write(STDOUT_FILENO, buf, rb); 
 	freeaddrinfo(result);
 
 

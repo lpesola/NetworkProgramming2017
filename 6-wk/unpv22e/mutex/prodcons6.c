@@ -3,7 +3,7 @@
 
 #define	MAXNITEMS 		1000000
 #define	MAXNTHREADS			100
-#define	MAXCTHREADS			100
+
 		/* globals shared by threads */
 int		nitems;				/* read-only by producer and consumer */
 int		buff[MAXNITEMS];
@@ -27,36 +27,27 @@ int
 main(int argc, char **argv)
 {
 	int			i, nthreads, count[MAXNTHREADS];
-	pthread_t	tid_produce[MAXNTHREADS], tid_consume[MAXCTHREADS];
+	pthread_t	tid_produce[MAXNTHREADS], tid_consume;
 
-	if (argc != 4)
-		err_quit("usage: prodcons6 <#items> <#producerthreads> <#consumerthreads>");
+	if (argc != 3)
+		err_quit("usage: prodcons6 <#items> <#threads>");
 	nitems = min(atoi(argv[1]), MAXNITEMS);
 	nthreads = min(atoi(argv[2]), MAXNTHREADS);
-	int cthreads = min(atoi(argv[3]), MAXCTHREADS);
-	int ccount[cthreads];
 
-	Set_concurrency(nthreads + cthreads);
+	Set_concurrency(nthreads + 1);
 		/* 4create all producers and one consumer */
 	for (i = 0; i < nthreads; i++) {
 		count[i] = 0;
 		Pthread_create(&tid_produce[i], NULL, produce, &count[i]);
 	}
-
-	for (i = 0; i < cthreads; i++) {
-		ccount[i] = 0;
-		Pthread_create(&tid_consume[i], NULL, consume, &ccount[i]);
-	}
+	Pthread_create(&tid_consume, NULL, consume, NULL);
 
 		/* wait for all producers and the consumer */
 	for (i = 0; i < nthreads; i++) {
 		Pthread_join(tid_produce[i], NULL);
-		printf("Producer %d = %d\n", i, count[i]);	
+		printf("count[%d] = %d\n", i, count[i]);	
 	}
-	for (i = 0; i < nthreads; i++) {
-		Pthread_join(tid_consume[i], NULL);
-		printf("Consumer %d = %d\n", i, ccount[i]);	
-	}
+	Pthread_join(tid_consume, NULL);
 
 	exit(0);
 }

@@ -10,7 +10,6 @@
 #include <errno.h>
 #include <string.h>
 #define PORT 7
-#define SERVER "ukko127.cs.helsinki.fi"
 
 
 /* ex 2 b.
@@ -18,8 +17,13 @@
  * What happens in the network? What does connect() do?
  * Send datagrams using connected socket to a host that doesn't
  * accept the messages from the given port. What happens in the network? 
+ * The messages get discarded, server sends ICMP port unreachable.
+ *
  * Which error is generated?
+ * Connection refused.
+ *
  * What if the host is not connected to the network at all?
+ * Nothing happens, the address cannot be translated. There is no host that would send the ICMP message.
  */
 
 int main(int argc, char *argv[])
@@ -65,7 +69,7 @@ int main(int argc, char *argv[])
 	 *
 	 * So connect can only be used on a socket that is used to communicate with a single other host.
 	 *
-	 * (*) datagrams whose address/port doesnt match, are either discarded with an ICPM port unreachable
+	 * (*) datagrams whose address/port doesnt match, are either discarded with an ICMP port unreachable
 	 * 	or delivered to another socket on the host.
 	 */
 

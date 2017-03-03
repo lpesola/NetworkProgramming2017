@@ -7,6 +7,7 @@
 #include <errno.h> 
 #include <stdio.h>
 #include <unistd.h>
+#define LSTNPORT 22047 
 
 int main (int argc, char *argv[]) {
 
@@ -48,20 +49,19 @@ int main (int argc, char *argv[]) {
 	int rb = read(sockfd, buf, sizeof buf);
 	write(STDOUT_FILENO, buf, rb); 
 	
-	char msg[] = "HELLO\n";
+	char msg[] = "hello\nlpesola\n";
 	write(sockfd, msg, sizeof msg);
+	printf("sent: %s\n", msg);
 
-	rb  = read(sockfd, buf, sizeof buf);
-	write(STDOUT_FILENO, buf, rb); 
 
-	char name[] = "this is LPESOLA client\n";
-	int sb = send(sockfd, name, sizeof name, 0);
+	while( (rb = read(sockfd, buf, sizeof buf)) != 0 ) {
+		if (rb == -1 && errno == EINTR) 
+			continue;
+		else	
+			write(STDOUT_FILENO, buf, rb); 
+			
+	}
 
-	rb  = read(sockfd, buf, sizeof buf);
-	write(STDOUT_FILENO, buf, rb); 
-
-	rb  = read(sockfd, buf, sizeof buf);
-	write(STDOUT_FILENO, buf, rb); 
 	freeaddrinfo(result);
 
 

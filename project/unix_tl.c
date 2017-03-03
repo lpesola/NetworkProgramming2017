@@ -7,12 +7,13 @@
 #include <errno.h> 
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/wait.h>
 #define LSTNPORT 22047 
 #define SOURCECODE "kurssit/netwprog/project/unix_tl.c"
 void serve();
 void create_servers();
 
-int main (int argc, char *argv[]) {
+int main (void) {
 
 	struct addrinfo hints;
 	// use these to specify what kind of information we want
@@ -99,6 +100,8 @@ int main (int argc, char *argv[]) {
 	}
 
 	close(sockfd);
+	// we can block here until everything is done
+	wait(NULL);
 	return(0);
 }
 

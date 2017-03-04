@@ -9,12 +9,14 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <ctype.h> // for uppercase conversion
+#include <fcntl.h>
+#include <sys/stat.h> // for opening file
 #define LSTNPORT 22047 
 #define SOURCECODE "kurssit/netwprog/project/unix_tl.c\n"
 
 void serve();
 void create_servers();
-void send_file(char *line);
+void send_file(char *fname, struct sockaddr_in serv, int port_no);
 
 int main (void) {
 
@@ -133,8 +135,7 @@ void create_servers(int port) {
 	}
 	listen(listnsock, 2);
 
-	// for testing purposes only accept once
-	for (int i = 0; i < 3; i++) {
+	for (;;) {
 		struct sockaddr_in cli_addr;
 		socklen_t clilen = sizeof(cli_addr);
 		int clisock = accept(listnsock, (struct sockaddr*)&cli_addr, &clilen);
@@ -171,15 +172,15 @@ void serve(int sockfd) {
 	// if this is 0, the previous read didn't contain a newline
 	// otherwise contains a command
 	char cmd = 0;
-	char *newline = NULL;
 	while((nbytes = read(sockfd, readbuf, sizeof readbuf)) != 0) {
 		if (nbytes == -1 && errno == EINTR)
 			continue;
 		if (nbytes == -1) {
-			perror("this child stops (can be intentional) : ");
+			printf("child %d stops now\n", getpid()); 
+			perror("due to:");
 			break;
 		}
-	
+
 
 		/* this still expects that after a newline there is nothing!!!
 		 * that seemed to be the case but cant be sure..
@@ -191,7 +192,6 @@ void serve(int sockfd) {
 		if (n_exists != NULL) {
 			// a line ended during this read
 			// check the command
-			puts("HERE ENDED A LINE!!!!!!!!");
 			cmd = line[0];
 		} else {
 			continue;
@@ -202,33 +202,60 @@ void serve(int sockfd) {
 			case '#':
 				// this is a comment: ignore but print
 				// expect everything to be read in one read...
-				puts("THE FOLLOWING LINE WAS IGNORED");
+				puts("THE FOLLOWING WILL BE IGNORED");
 				write(STDOUT_FILENO, line, j);
-				puts("THAT WAS AN IGNORED LINE");
+				puts("---------------------");
 				break;
 			case 'E':
 				for (int i = 0; i < j; i++) {
 					writebuf[i] = toupper(line[i]);
 				}
-				puts("ECHO THIS LINE:");
-				write(STDOUT_FILENO, writebuf, j);
 				write(sockfd, writebuf, j);
-				puts("THAT LINE WAS ECHOED TO THE SENDER");
+				puts("A LINE WAS ECHOED TO THE SENDER");
 				break;
 			case 'C':
-			        write(sockfd, SOURCECODE, sizeof SOURCECODE);
+				write(sockfd, SOURCECODE, sizeof SOURCECODE);
+				puts("PATHNAME SENT");
 				break;
 			case 'F':
 				// maybe check that the file requested makes some sense
 				// =>the program source code and not /etc/passwd
 				// or some other silly thing
-				send_file(readbuf);
+				puts("FILE REQUESTED");
+				printf("FIND OUT PORT TO SEND THE FILE TO from %s\n", line);
+				char *port  = strrchr(line, ' ' ); // this should be the second one
+				if (port == NULL) {
+					perror(" no port found");
+					exit(1);
+				}
+				int port_no = atoi(port+1);
+				printf("CONNECT TO: %d \n", port_no);	
+				*port = '\0';
+				char *fname = strchr(line, ' ')+1;
+				printf("FILENAME TO SEND: %s\n", fname);
+				
+
+				struct stat finfo;
+				stat(fname, &finfo);
+				int len = snprintf(NULL, 0, "%ld", finfo.st_size);
+				char *size = malloc(len+1);
+				snprintf(size, len+1, "%ld", finfo.st_size);       
+				printf("filesize is %s\n", size);
+				write(sockfd, size, sizeof size);
+				
+				struct sockaddr_in recvr = {0};
+				socklen_t addrlen = sizeof recvr;
+				getpeername(sockfd, (struct sockaddr*)&recvr, &addrlen);
+				send_file(fname, recvr, port_no);
+				puts("FILE SENT");
+
 				break;
 			case 'A':
-				puts("Everything done; can quit");
+				puts("ALL DONE");
 				break;
 			case 'Q':
 				// quit this connection?
+				printf("%d WILL CLOSE CONNECTION SOON\n", getpid());
 				close(sockfd);
 				break;
 			default:
@@ -242,22 +269,60 @@ void serve(int sockfd) {
 		memset(line, 0, sizeof line);
 		memset(writebuf, 0, sizeof writebuf);
 		j = 0;
-		
+
 	}
 
 
 }
 
 
-void send_file(char *line) {
+void send_file(char *fname, struct sockaddr_in serv, int port_no) {
 
-	/*
+	/* line should be F file port
 	 * find out name of file
 	 * find out port
-	 * reply with size
+	 * find out file size and make sure the file makes some sense
+	 * & is not something silly like /etc/passwd
 	 * connect to port
+	 * reply with size
 	 * send file
 	 * close socket
 	 */
+
+
+	int sockfd  = socket(PF_INET, SOCK_STREAM, PF_UNSPEC);
+	if (sockfd < 0) {
+		perror("create socket for sending file: ");
+		exit(1);
+	}
+
+	serv.sin_port = htons(port_no);
+
+	if (connect(sockfd, (const struct sockaddr*)&serv, sizeof(serv)) < 0) {
+		perror("connect in sendfile");
+	}
+
+	int ffd = open(fname, O_RDONLY);
+	if (ffd == -1) {
+		perror("cant open file");
+		exit(1);
+	}
+
+	char readbuf[10000];
+	int rbytes;
+	while((rbytes = read(ffd, readbuf, sizeof readbuf)) > 0) {
+		if (rbytes == -1 && errno == EINTR) 
+			continue;
+		if (rbytes == -1) {
+			perror("cant read file");
+			exit(1);
+		}
+		int wbytes = write(sockfd, readbuf, rbytes);		
+		printf("wrote %d B of %d B read in socket\n", wbytes, rbytes);
+	}
+
+	// everything written, close socket
+	close(sockfd);
+
 
 }
